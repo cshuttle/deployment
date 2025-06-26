@@ -1,0 +1,29 @@
+kind: Cluster
+name: Talos
+talos:
+  version: v1.10.4
+kubernetes:
+  version: v1.33.2
+features:
+  enableWorkloadProxy: true
+patches:
+  - name: cni
+    file: patches/cni.yaml
+---
+kind: ControlPlane
+machineClass:
+  name: 'Control Plane'
+  size: 3
+patches:
+  - name: cilium
+    file: patches/cilium.yaml
+  - name: argocd
+    file: patches/argocd.yaml
+  - name: monitoring
+    file: patches/monitoring.yaml
+---
+kind: Workers
+name: workers
+machineClass:
+  name: Worker
+  size: unlimited
