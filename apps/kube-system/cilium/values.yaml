@@ -2,6 +2,8 @@ cilium:
   kubeProxyReplacement: true
   ipam:
     mode: kubernetes
+  bgpControlPlane:
+    enabled: true
   securityContext:
     capabilities:
       ciliumAgent:
