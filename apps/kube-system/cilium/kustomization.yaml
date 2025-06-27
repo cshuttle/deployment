@@ -3,6 +3,7 @@ kind: Kustomization
 
 resources:
   - l2-announcement-policy.yaml
+  - ip-pool.yaml
 
 helmCharts:
   - name: cilium
