@@ -16,6 +16,8 @@ spec:
               revision: '{{ revision }}'
               directories:
                 - path: '{{ repoPath }}'
+                  exclude: true
+                - path: 'apps/*/*'
   syncPolicy:
     preserveResourcesOnDeletion: true
   template:

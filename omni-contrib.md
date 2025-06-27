@@ -71,6 +71,8 @@ spec:
               revision: '{{ revision }}'
               directories:
                 - path: '{{ repoPath }}'
+                  exclude: true
+                - path: 'apps/*/*'
   syncPolicy:
     preserveResourcesOnDeletion: true
   template:
@@ -205,6 +207,17 @@ metadata:
 ```
 
 
+```path=apps/kube-system/cilium/Chart.lock
+dependencies:
+- name: cilium
+  repository: https://helm.cilium.io
+  version: 1.14.5
+digest: sha256:113f9c368a1f32056f7a382e11e442d45af103c67669e039f4ee0017d04b1d0e
+generated: "2025-06-26T20:16:28.474598973-04:00"
+
+```
+
+
 ```path=apps/kube-system/cilium/Chart.yaml
 apiVersion: v2
 name: cilium
@@ -217,9 +230,53 @@ dependencies:
 ```
 
 
+```path=apps/kube-system/cilium/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - l2-announcement-policy.yaml
+
+helmCharts:
+  - name: cilium
+    repo: https://helm.cilium.io
+    version: v1.14.5
+    releaseName: cilium
+    namespace: kube-system
+    valuesFile: values.yaml
+
+```
+
+
+```path=apps/kube-system/cilium/l2-announcement-policy.yaml
+apiVersion: "cilium.io/v2alpha1"
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: default-l2-policy
+spec:
+  serviceSelector:
+    matchLabels: {}
+  nodeSelector:
+    matchExpressions:
+      - key: node-role.kubernetes.io/control-plane
+        operator: DoesNotExist
+  interfaces:
+  - ^ens[0-9]+
+  externalIPs: true
+  loadBalancerIPs: true
+
+```
+
+
 ```path=apps/kube-system/cilium/values.yaml
 cilium:
   kubeProxyReplacement: true
+  l2announcements:
+    enabled: true
+    interfaces:
+    - ens18
+  externalIPs:
+    enabled: true
   ipam:
     mode: kubernetes
   securityContext:
@@ -261,6 +318,7 @@ cilium:
           # Enable Omni Workload Proxying for this service
           omni-kube-service-exposer.sidero.dev/port: "50080"
           omni-kube-service-exposer.sidero.dev/label: Hubble
+          omni-kube-service-exposer.sidero.dev/prefix: Hubble
 
 ```
 
@@ -327,6 +385,7 @@ kube-prometheus-stack:
       annotations:
         omni-kube-service-exposer.sidero.dev/port: "50082"
         omni-kube-service-exposer.sidero.dev/label: Grafana
+        omni-kube-service-exposer.sidero.dev/prefix: Grafana
 
 ```
 

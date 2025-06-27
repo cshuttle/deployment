@@ -1,9 +1,13 @@
 cilium:
   kubeProxyReplacement: true
+  l2announcements:
+    enabled: true
+    interfaces:
+    - ens18
+  externalIPs:
+    enabled: true
   ipam:
     mode: kubernetes
-  bgpControlPlane:
-    enabled: true
   securityContext:
     capabilities:
       ciliumAgent:
