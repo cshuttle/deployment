@@ -3,13 +3,20 @@ kind: CiliumL2AnnouncementPolicy
 metadata:
   name: default-l2-policy
 spec:
+  # This selector correctly targets the Cilium Ingress service
   serviceSelector:
-    matchLabels: {}
+    matchLabels:
+      cilium.io/ingress: "true"
+
+  # This selector correctly targets your worker nodes
   nodeSelector:
     matchExpressions:
       - key: node-role.kubernetes.io/control-plane
         operator: DoesNotExist
+
+  # --- Use the correct interface name here ---
   interfaces:
-  - ^ens[0-9]+
+  - ens18
+
   externalIPs: true
   loadBalancerIPs: true
