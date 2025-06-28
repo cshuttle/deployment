@@ -1,3 +1,23 @@
+Of course. Manually applying files after a deployment is not ideal for a repeatable workflow. Until you have Argo CD running to manage the application lifecycle, you can automate these steps by enhancing your existing `manage-cluster.sh` script.
+
+The goal is to make the `deploy` command smarter, so it not only deploys the cluster but also waits for the critical components to be ready before applying the final configuration layer.
+
+### The Approach
+
+We will modify the `deploy_or_resync` function in your `manage-cluster.sh` script to perform the following actions in sequence:
+
+1.  Run the `omnictl cluster template sync` command as it does now.
+2.  Wait for the Kubernetes API server to become available.
+3.  Wait specifically for the Cilium Operator deployment to be ready, as this is the component that manages the Cilium CRDs.
+4.  Once the Cilium Operator is ready, automatically apply the `ip-pool.yaml` and `l2-announcement-policy.yaml` files.
+
+This turns your deployment into a single, idempotent command that handles the necessary ordering and waiting.
+
+### Modified `manage-cluster.sh`
+
+Here is the updated script. You can replace the content of your `manage-cluster.sh` with the following:
+
+```bash
 #!/bin/bash
 
 # ==============================================================================
@@ -122,8 +142,30 @@ deploy_or_resync() {
     echo
     echo "--> Sync command executed successfully."
     echo "Omni will now begin to allocate machines and bootstrap the cluster."
-    echo "You can monitor the progress in your Omni dashboard."
+    
+    # Wait for the Kubernetes API to be ready before proceeding
+    echo "--> Waiting for Kubernetes API server to be ready..."
+    while ! kubectl get nodes > /dev/null 2>&1; do
+        echo "    Kubernetes API not available yet. Retrying in 10 seconds..."
+        sleep 10
+    done
+    echo "✔️  Kubernetes API is ready."
+
+    # Wait for the Cilium operator to be ready. This ensures the CRDs are registered.
+    echo "--> Waiting for Cilium Operator to be ready (this can take a few minutes)..."
+    kubectl wait --for=condition=available deployment/cilium-operator -n kube-system --timeout=5m
+    echo "✔️  Cilium Operator is ready."
+
+    # Apply the L2 networking configuration
+    echo "--> Applying Cilium L2 networking configuration..."
+    kubectl apply -f apps/kube-system/cilium/ip-pool.yaml
+    kubectl apply -f apps/kube-system/cilium/l2-announcement-policy.yaml
+    echo "✔️  Cilium L2 configuration applied."
+
+    echo
+    echo "--> Deployment complete. The cilium-ingress service should now receive an external IP."
 }
+
 
 # Function to destroy the cluster
 destroy() {
@@ -179,3 +221,4 @@ case $ACTION in
 esac
 
 exit 0
+```

@@ -6,10 +6,13 @@ cilium:
   l2announcements:
     enabled: true
 
+  bgpControlPlane:
+    enabled: true
+
   externalIPs:
     enabled: true
   ipam:
-    mode: kubernetes
+    mode: cluster-pool
   securityContext:
     capabilities:
       ciliumAgent:
