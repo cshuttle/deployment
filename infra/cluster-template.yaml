@@ -26,4 +26,4 @@ kind: Workers
 name: workers
 machineClass:
   name: Worker
-  size: unlimited
+  size: 3
