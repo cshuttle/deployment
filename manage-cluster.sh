@@ -30,12 +30,12 @@ TEMPLATE_FILE="infra/cluster-template.yaml" #
 usage() {
     echo "Usage: $0 {deploy|resync|destroy|install-completion}"
     echo
-    echo "This script manages the lifecycle of the SideroLabs Omni example cluster." #
+    echo "This script manages the lifecycle of the SideroLabs Omni example cluster."
     echo
     echo "Commands:"
-    echo "  deploy              : Creates or updates the cluster based on the template file." #
-    echo "  resync              : Resyncs the cluster with the template. Equivalent to 'deploy'." #
-    echo "  destroy             : Deletes the '$CLUSTER_NAME' cluster from Omni." #
+    echo "  deploy              : Creates or updates the cluster based on the template file."
+    echo "  resync              : Resyncs the cluster with the template. Equivalent to 'deploy'."
+    echo "  destroy             : Deletes the '$CLUSTER_NAME' cluster from Omni."
     echo "  install-completion  : Installs bash completion for this script into your ~/.bashrc file."
     echo
     exit 1
@@ -87,63 +87,63 @@ install_completion() {
 
 # Function to check for necessary prerequisites before running commands
 check_prereqs() {
-    echo "--> Checking for prerequisites..." #
-    if ! command -v omnictl &> /dev/null; then #
-        echo "Error: omnictl CLI tool not found." >&2 #
-        echo "Please install and configure it as per the documentation: https://omni.siderolabs.com/how-to-guides/install-and-configure-omnictl" >&2 #
-        exit 1 #
-    fi #
-    echo "✔️  omnictl found." #
+    echo "--> Checking for prerequisites..."
+    if ! command -v omnictl &> /dev/null; then
+        echo "Error: omnictl CLI tool not found." >&2
+        echo "Please install and configure it as per the documentation: https://omni.siderolabs.com/how-to-guides/install-and-configure-omnictl" >&2
+        exit 1
+    fi
+    echo "✔️  omnictl found."
 
-    if [ ! -f "$TEMPLATE_FILE" ]; then #
-        echo "Error: Cluster template file not found at '$TEMPLATE_FILE'." >&2 #
-        echo "Please ensure you are running this script from the root of the 'omni-contrib' repository." >&2 #
-        exit 1 #
-    fi #
-    echo "✔️  Cluster template file found." #
-    echo #
+    if [ ! -f "$TEMPLATE_FILE" ]; then
+        echo "Error: Cluster template file not found at '$TEMPLATE_FILE'." >&2
+        echo "Please ensure you are running this script from the root of the 'omni-contrib' repository." >&2
+        exit 1
+    fi
+    echo "✔️  Cluster template file found."
+    echo
 }
 
 # Function to deploy or resync the cluster
 deploy_or_resync() {
-    echo "--> Syncing cluster template '$TEMPLATE_FILE' with Omni..." #
-    echo "This will create the '$CLUSTER_NAME' cluster if it doesn't exist, or update it if it does." #
-    echo #
+    echo "--> Syncing cluster template '$TEMPLATE_FILE' with Omni..."
+    echo "This will create the '$CLUSTER_NAME' cluster if it doesn't exist, or update it if it does."
+    echo
 
     # === FIX START ===
     # Change to the infra directory to resolve relative patch paths correctly.
     # We use a subshell (...) to ensure the directory change is temporary.
-    ( #
-        cd "$(dirname "$TEMPLATE_FILE")" && \ #
-        omnictl cluster template sync --file "$(basename "$TEMPLATE_FILE")" #
+    (
+        cd "$(dirname "$TEMPLATE_FILE")" && \
+        omnictl cluster template sync --file "$(basename "$TEMPLATE_FILE")"
     ) #
     # === FIX END ===
     
-    echo #
-    echo "--> Sync command executed successfully." #
-    echo "Omni will now begin to allocate machines and bootstrap the cluster." #
-    echo "You can monitor the progress in your Omni dashboard." #
+    echo
+    echo "--> Sync command executed successfully."
+    echo "Omni will now begin to allocate machines and bootstrap the cluster."
+    echo "You can monitor the progress in your Omni dashboard."
 }
 
 # Function to destroy the cluster
 destroy() {
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" #
-    echo "!! WARNING: This is a destructive action that cannot be undone. !!" #
-    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" #
-    echo #
-    echo "You are about to permanently delete the '$CLUSTER_NAME' cluster from Omni." #
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo "!! WARNING: This is a destructive action that cannot be undone. !!"
+    echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+    echo
+    echo "You are about to permanently delete the '$CLUSTER_NAME' cluster from Omni."
     
     # User confirmation prompt
-    read -p "Are you sure you want to continue? (y/n): " -n 1 -r #
-    echo #
+    read -p "Are you sure you want to continue? (y/n): " -n 1 -r
+    echo
     
-    if [[ $REPLY =~ ^[Yy]$ ]]; then #
-        echo "--> Proceeding with cluster destruction..." #
-        omnictl cluster delete "$CLUSTER_NAME" #
-        echo #
-        echo "--> Cluster '$CLUSTER_NAME' deletion initiated." #
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "--> Proceeding with cluster destruction..."
+        omnictl cluster delete "$CLUSTER_NAME"
+        echo
+        echo "--> Cluster '$CLUSTER_NAME' deletion initiated."
     else
-        echo "--> Cluster destruction cancelled by user." #
+        echo "--> Cluster destruction cancelled by user."
     fi
 }
 
@@ -157,25 +157,25 @@ if [[ "$1" == "install-completion" ]]; then
 fi
 
 # Check for arguments
-if [ "$#" -ne 1 ]; then #
+if [ "$#" -ne 1 ]; then
     usage
 fi
 
-ACTION=$1 #
+ACTION=$1
 
-check_prereqs #
+check_prereqs
 
-case $ACTION in #
-    deploy|resync) #
-        deploy_or_resync #
+case $ACTION in
+    deploy|resync)
+        deploy_or_resync
         ;;
-    destroy) #
-        destroy #
+    destroy)
+        destroy
         ;;
     *)
-        echo "Error: Invalid command '$ACTION'" >&2 #
+        echo "Error: Invalid command '$ACTION'" >&2
         usage
         ;;
 esac
 
-exit 0 #
+exit 0
