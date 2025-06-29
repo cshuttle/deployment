@@ -3,7 +3,6 @@ kind: ApplicationSet
 metadata:
   name: bootstrap
 spec:
-  # FIX: Using a single, simple git generator is the correct pattern here.
   generators:
     - git:
         repoURL: https://github.com/cshuttle/deployment.git
@@ -14,7 +13,6 @@ spec:
     preserveResourcesOnDeletion: true
   template:
     metadata:
-      # This naming convention is now correct
       name: '{{path.elements[1]}}-{{path.basename}}'
       namespace: argocd
     spec:
@@ -25,7 +23,6 @@ spec:
         path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
-        # This destination namespace is now correct
         namespace: '{{path.elements[1]}}'
       syncPolicy:
         automated:
@@ -43,7 +40,6 @@ spec:
             factor: 2
             maxDuration: 5m
       ignoreDifferences:
-        # Cilium generated certs
         - name: cilium-ca
           kind: Secret
           namespace: kube-system
