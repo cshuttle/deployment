@@ -8,11 +8,14 @@ spec:
     matchLabels:
       cilium.io/ingress: "true"
 
-  # This selector correctly targets your worker nodes
+  # This selector targets all nodes since worker nodes don't have the worker role label
   nodeSelector:
     matchExpressions:
-      - key: node-role.kubernetes.io/control-plane
-        operator: DoesNotExist
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+
 
   # --- Use the correct interface name here ---
   interfaces:

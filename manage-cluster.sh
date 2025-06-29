@@ -1,23 +1,3 @@
-Of course. Manually applying files after a deployment is not ideal for a repeatable workflow. Until you have Argo CD running to manage the application lifecycle, you can automate these steps by enhancing your existing `manage-cluster.sh` script.
-
-The goal is to make the `deploy` command smarter, so it not only deploys the cluster but also waits for the critical components to be ready before applying the final configuration layer.
-
-### The Approach
-
-We will modify the `deploy_or_resync` function in your `manage-cluster.sh` script to perform the following actions in sequence:
-
-1.  Run the `omnictl cluster template sync` command as it does now.
-2.  Wait for the Kubernetes API server to become available.
-3.  Wait specifically for the Cilium Operator deployment to be ready, as this is the component that manages the Cilium CRDs.
-4.  Once the Cilium Operator is ready, automatically apply the `ip-pool.yaml` and `l2-announcement-policy.yaml` files.
-
-This turns your deployment into a single, idempotent command that handles the necessary ordering and waiting.
-
-### Modified `manage-cluster.sh`
-
-Here is the updated script. You can replace the content of your `manage-cluster.sh` with the following:
-
-```bash
 #!/bin/bash
 
 # ==============================================================================
@@ -25,14 +5,15 @@ Here is the updated script. You can replace the content of your `manage-cluster.
 #
 # This script provides commands to deploy, resync, or destroy the Talos
 # Kubernetes cluster managed by SideroLabs Omni. It now includes a command
-# to install bash completion for its options.
+# to install bash completion for its options and detects OIDC auth issues.
 #
 # Prerequisites:
 # 1. An Omni account with registered machines.
 #    (https://signup.siderolabs.io/)
 # 2. `omnictl` CLI tool installed and configured.
 #    (https://omni.siderolabs.com/how-to-guides/install-and-configure-omnictl)
-# 3. Machine Classes 'omni-contrib-controlplane' and 'omni-contrib-workers'
+# 3. `kubectl` with OIDC correctly configured for your cluster.
+# 4. Machine Classes 'omni-contrib-controlplane' and 'omni-contrib-workers'
 #    configured in your Omni instance.
 # ==============================================================================
 
@@ -115,6 +96,43 @@ check_prereqs() {
     fi
     echo "✔️  omnictl found."
 
+    if ! command -v kubectl &> /dev/null; then
+        echo "Error: kubectl CLI tool not found." >&2
+        echo "Please install it: https://kubernetes.io/docs/tasks/tools/install-kubectl/" >&2
+        exit 1
+    fi
+    echo "✔️  kubectl found."
+
+    # NEW: Check for kubectl authentication and OIDC issues
+    echo "--> Checking kubectl authentication to the cluster..."
+    # Run a lightweight kubectl command with a timeout to avoid indefinite hangs.
+    # We capture standard error to inspect it for OIDC-specific failures.
+    if ! KUBECTL_OUTPUT=$(timeout 20s kubectl version --short 2>&1); then
+        # The command failed. Now check if it's the OIDC issue.
+        if [[ "$KUBECTL_OUTPUT" == *"oidc"* ]]; then
+            echo
+            echo "!!!!!!!!!!!!!!!!!!!!!!!!!![ Authentication Error ]!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
+            echo "!! kubectl failed with an OIDC authentication error." >&2
+            echo "!! This often happens if your authentication token is stale or corrupt." >&2
+            echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
+            echo
+            echo "---[ Remediation Advice ]---------------------------------------------------" >&2
+            echo "Please run the following command to clear your OIDC token cache:" >&2
+            echo "  kubectl oidc-login clean" >&2
+            echo
+            echo "After running the command, try this script again." >&2
+            echo "----------------------------------------------------------------------------" >&2
+            exit 1
+        else
+            # It's a different kubectl error (e.g., cluster not reachable)
+            echo "Error: A kubectl command failed. Please check your kubectl configuration and cluster connectivity." >&2
+            echo "Error details:" >&2
+            echo "$KUBECTL_OUTPUT" >&2
+            exit 1
+        fi
+    fi
+    echo "✔️  kubectl authentication is successful."
+
     if [ ! -f "$TEMPLATE_FILE" ]; then
         echo "Error: Cluster template file not found at '$TEMPLATE_FILE'." >&2
         echo "Please ensure you are running this script from the root of the 'omni-contrib' repository." >&2
@@ -130,19 +148,15 @@ deploy_or_resync() {
     echo "This will create the '$CLUSTER_NAME' cluster if it doesn't exist, or update it if it does."
     echo
 
-    # === FIX START ===
-    # Change to the infra directory to resolve relative patch paths correctly.
-    # We use a subshell (...) to ensure the directory change is temporary.
     (
         cd "$(dirname "$TEMPLATE_FILE")" && \
         omnictl cluster template sync --file "$(basename "$TEMPLATE_FILE")"
-    ) #
-    # === FIX END ===
-    
+    )
+
     echo
     echo "--> Sync command executed successfully."
     echo "Omni will now begin to allocate machines and bootstrap the cluster."
-    
+
     # Wait for the Kubernetes API to be ready before proceeding
     echo "--> Waiting for Kubernetes API server to be ready..."
     while ! kubectl get nodes > /dev/null 2>&1; do
@@ -151,9 +165,17 @@ deploy_or_resync() {
     done
     echo "✔️  Kubernetes API is ready."
 
-    # Wait for the Cilium operator to be ready. This ensures the CRDs are registered.
-    echo "--> Waiting for Cilium Operator to be ready (this can take a few minutes)..."
-    kubectl wait --for=condition=available deployment/cilium-operator -n kube-system --timeout=5m
+    # Wait for the Cilium Operator deployment to exist.
+    echo "--> Waiting for the Cilium Operator deployment to be created..."
+    until kubectl get deployment cilium-operator -n kube-system > /dev/null 2>&1; do
+        echo "    Cilium Operator deployment not found yet. Retrying in 10 seconds..."
+        sleep 10
+    done
+    echo "✔️  Cilium Operator deployment found."
+
+    # Wait for the Cilium Operator deployment to complete its rollout.
+    echo "--> Waiting for Cilium Operator to become available..."
+    kubectl rollout status deployment/cilium-operator -n kube-system --timeout=5m
     echo "✔️  Cilium Operator is ready."
 
     # Apply the L2 networking configuration
@@ -174,11 +196,11 @@ destroy() {
     echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
     echo
     echo "You are about to permanently delete the '$CLUSTER_NAME' cluster from Omni."
-    
+
     # User confirmation prompt
     read -p "Are you sure you want to continue? (y/n): " -n 1 -r
     echo
-    
+
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "--> Proceeding with cluster destruction..."
         omnictl cluster delete "$CLUSTER_NAME"
@@ -221,4 +243,3 @@ case $ACTION in
 esac
 
 exit 0
-```
