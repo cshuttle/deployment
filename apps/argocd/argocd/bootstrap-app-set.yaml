@@ -3,37 +3,29 @@ kind: ApplicationSet
 metadata:
   name: bootstrap
 spec:
+  # FIX: Using a single, simple git generator is the correct pattern here.
   generators:
-    - matrix:
-        generators:
-          - list:
-              elements:
-                - repoURL: https://github.com/cshuttle/deployment.git
-                  revision: HEAD
-                  repoPath: apps/*/*
-          - git:
-              repoURL: '{{ repoURL }}'
-              revision: '{{ revision }}'
-              directories:
-                - path: '{{ repoPath }}'
-                  exclude: true
-                - path: 'apps/*/*'
+    - git:
+        repoURL: https://github.com/cshuttle/deployment.git
+        revision: HEAD
+        directories:
+          - path: apps/*/*
   syncPolicy:
     preserveResourcesOnDeletion: true
   template:
     metadata:
-      # FIX: Use path.elements[1] (namespace) and path.basename (app name) for the app name
+      # This naming convention is now correct
       name: '{{path.elements[1]}}-{{path.basename}}'
       namespace: argocd
     spec:
       project: default
       source:
-        repoURL: '{{ repoURL }}'
-        targetRevision: '{{ revision }}'
-        path: '{{ path }}'
+        repoURL: https://github.com/cshuttle/deployment.git
+        targetRevision: HEAD
+        path: '{{path}}'
       destination:
         server: https://kubernetes.default.svc
-        # FIX: Use path.elements[1] to correctly set the destination namespace
+        # This destination namespace is now correct
         namespace: '{{path.elements[1]}}'
       syncPolicy:
         automated:
