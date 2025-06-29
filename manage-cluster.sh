@@ -24,6 +24,8 @@ set -e # Exit immediately if a command exits with a non-zero status.
 CLUSTER_NAME="Talos" #
 # The main template file for cluster definition.
 TEMPLATE_FILE="infra/cluster-template.yaml" #
+# The Omni Service Account secret ID from Bitwarden Secrets Manager.
+export OMNI_SERVICEACCOUNT_SECRET_ID="459a62b0-31fb-4f07-9976-b30800cbe5d8"
 
 # --- Functions ---
 
@@ -86,61 +88,6 @@ install_completion() {
     echo "  source $bashrc_file"
 }
 
-# Function to check for necessary prerequisites before running commands
-check_prereqs() {
-    echo "--> Checking for prerequisites..."
-    if ! command -v omnictl &> /dev/null; then
-        echo "Error: omnictl CLI tool not found." >&2
-        echo "Please install and configure it as per the documentation: https://omni.siderolabs.com/how-to-guides/install-and-configure-omnictl" >&2
-        exit 1
-    fi
-    echo "✔️  omnictl found."
-
-    if ! command -v kubectl &> /dev/null; then
-        echo "Error: kubectl CLI tool not found." >&2
-        echo "Please install it: https://kubernetes.io/docs/tasks/tools/install-kubectl/" >&2
-        exit 1
-    fi
-    echo "✔️  kubectl found."
-
-    # NEW: Check for kubectl authentication and OIDC issues
-    echo "--> Checking kubectl authentication to the cluster..."
-    # Run a lightweight kubectl command with a timeout to avoid indefinite hangs.
-    # We capture standard error to inspect it for OIDC-specific failures.
-    if ! KUBECTL_OUTPUT=$(timeout 20s kubectl version --short 2>&1); then
-        # The command failed. Now check if it's the OIDC issue.
-        if [[ "$KUBECTL_OUTPUT" == *"oidc"* ]]; then
-            echo
-            echo "!!!!!!!!!!!!!!!!!!!!!!!!!![ Authentication Error ]!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
-            echo "!! kubectl failed with an OIDC authentication error." >&2
-            echo "!! This often happens if your authentication token is stale or corrupt." >&2
-            echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!" >&2
-            echo
-            echo "---[ Remediation Advice ]---------------------------------------------------" >&2
-            echo "Please run the following command to clear your OIDC token cache:" >&2
-            echo "  kubectl oidc-login clean" >&2
-            echo
-            echo "After running the command, try this script again." >&2
-            echo "----------------------------------------------------------------------------" >&2
-            exit 1
-        else
-            # It's a different kubectl error (e.g., cluster not reachable)
-            echo "Error: A kubectl command failed. Please check your kubectl configuration and cluster connectivity." >&2
-            echo "Error details:" >&2
-            echo "$KUBECTL_OUTPUT" >&2
-            exit 1
-        fi
-    fi
-    echo "✔️  kubectl authentication is successful."
-
-    if [ ! -f "$TEMPLATE_FILE" ]; then
-        echo "Error: Cluster template file not found at '$TEMPLATE_FILE'." >&2
-        echo "Please ensure you are running this script from the root of the 'omni-contrib' repository." >&2
-        exit 1
-    fi
-    echo "✔️  Cluster template file found."
-    echo
-}
 
 # Function to deploy or resync the cluster
 deploy_or_resync() {
@@ -220,8 +167,6 @@ if [ "$#" -ne 1 ]; then
 fi
 
 ACTION=$1
-
-check_prereqs
 
 case $ACTION in
     deploy|resync)
