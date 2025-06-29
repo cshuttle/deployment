@@ -178,12 +178,6 @@ deploy_or_resync() {
     kubectl rollout status deployment/cilium-operator -n kube-system --timeout=5m
     echo "✔️  Cilium Operator is ready."
 
-    # Apply the L2 networking configuration
-    echo "--> Applying Cilium L2 networking configuration..."
-    kubectl apply -f apps/kube-system/cilium/ip-pool.yaml
-    kubectl apply -f apps/kube-system/cilium/l2-announcement-policy.yaml
-    echo "✔️  Cilium L2 configuration applied."
-
     echo
     echo "--> Deployment complete. The cilium-ingress service should now receive an external IP."
 }
