@@ -4,26 +4,33 @@ metadata:
   name: bootstrap
 spec:
   generators:
-    - git:
-        repoURL: https://github.com/cshuttle/deployment.git
-        revision: HEAD
-        directories:
-          - path: apps/*/*
+    - matrix:
+        generators:
+          - list:
+              elements:
+                - repoURL: https://github.com/siderolabs/contrib.git
+                  revision: HEAD
+                  repoPath: examples/omni/apps/*/*
+          - git:
+              repoURL: '{{ repoURL }}'
+              revision: '{{ revision }}'
+              directories:
+                - path: '{{ repoPath }}'
   syncPolicy:
     preserveResourcesOnDeletion: true
   template:
     metadata:
-      name: '{{path.elements[1]}}-{{path.basename}}'
+      name: '{{ path[3] }}-{{ path.basenameNormalized }}'
       namespace: argocd
     spec:
       project: default
       source:
-        repoURL: https://github.com/cshuttle/deployment.git
-        targetRevision: HEAD
-        path: '{{path}}'
+        repoURL: '{{ repoURL }}'
+        targetRevision: '{{ revision }}'
+        path: '{{ path }}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{path.elements[1]}}'
+        namespace: '{{ path[3] }}'
       syncPolicy:
         automated:
           prune: false
@@ -40,6 +47,7 @@ spec:
             factor: 2
             maxDuration: 5m
       ignoreDifferences:
+        # Cilium generated certs
         - name: cilium-ca
           kind: Secret
           namespace: kube-system

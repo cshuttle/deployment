@@ -1,9 +1,0 @@
-# apps/kube-system/cilium/patches/ingress-service-selector.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: cilium-ingress
-  namespace: kube-system
-spec:
-  selector:
-    k8s-app: cilium-envoy

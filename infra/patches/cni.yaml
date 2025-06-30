@@ -1,4 +1,6 @@
 cluster:
   network:
     cni:
-      name: custom
+      name: none
+  proxy:
+    disabled: true

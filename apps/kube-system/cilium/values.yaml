@@ -1,23 +1,7 @@
 cilium:
-  # This setting was already correct
   kubeProxyReplacement: true
-
-  # Enable L2 announcements feature
-  l2announcements:
-    enabled: true
-
-  bgpControlPlane:
-    enabled: true
-
-  ingressController:
-    enabled: true
-    # Add this line to enforce a single, shared LoadBalancer for all ingresses
-    loadbalancerMode: shared
-
-  externalIPs:
-    enabled: true
   ipam:
-    mode: cluster-pool
+    mode: kubernetes
   securityContext:
     capabilities:
       ciliumAgent:
@@ -40,8 +24,13 @@ cilium:
     hostRoot: /sys/fs/cgroup
     autoMount:
       enabled: false
+  # Enable Cilium Ingress Controller
+  ingressController:
+    enabled: true
+  # Use KubePrism to access cluster API
   k8sServiceHost: localhost
   k8sServicePort: 7445
+  # Enable Hubble
   hubble:
     relay:
       enabled: true
@@ -49,6 +38,6 @@ cilium:
       enabled: true
       service:
         annotations:
+          # Enable Omni Workload Proxying for this service
           omni-kube-service-exposer.sidero.dev/port: "50080"
           omni-kube-service-exposer.sidero.dev/label: Hubble
-          omni-kube-service-exposer.sidero.dev/prefix: Hubble
