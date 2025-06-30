@@ -22283,9 +22283,9 @@ cluster:
                     revision: HEAD
               - git:
                   directories:
-                  - path: '{{ repoPath }}'
-                  repoURL: '{{ repoURL }}'
-                  revision: '{{ revision }}'
+                  - path: '{{ element.repoPath }}'
+                  repoURL: '{{ element.repoURL }}'
+                  revision: '{{ element.revision }}'
           syncPolicy:
             preserveResourcesOnDeletion: true
           template:
@@ -22320,8 +22320,8 @@ cluster:
               project: default
               source:
                 path: '{{ path }}'
-                repoURL: '{{ repoURL }}'
-                targetRevision: '{{ revision }}'
+                repoURL: '{{ element.repoURL }}'
+                targetRevision: '{{ element.revision }}'
               syncPolicy:
                 automated:
                   prune: false
