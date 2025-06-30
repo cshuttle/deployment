@@ -1,0 +1,7 @@
+apiVersion: v2
+name: sm-operator
+version: 0.1.0 # Use the latest version from the Bitwarden chart repository
+dependencies:
+  - name: sm-operator
+    version: "0.3.0" # Specify the desired chart version
+    repository: "https://charts.bitwarden.com"
