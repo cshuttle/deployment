@@ -3,7 +3,7 @@
 # ==============================================================================
 # SideroLabs Omni Example Cluster Management Script
 #
-# This script provides commands to deploy, resync, or destroy the Talos
+# This script provides commands to deploy, re-deploy, or destroy the Talos
 # Kubernetes cluster managed by SideroLabs Omni. It now includes a command
 # to install bash completion for its options and detects OIDC auth issues.
 #
@@ -31,15 +31,15 @@ export OMNI_SERVICEACCOUNT_SECRET_ID="459a62b0-31fb-4f07-9976-b30800cbe5d8"
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 {deploy|resync|destroy|install-completion}"
+    echo "Usage: $0 {deploy|re-deploy|destroy|install-completion}"
     echo
     echo "This script manages the lifecycle of the SideroLabs Omni example cluster."
     echo
     echo "Commands:"
     echo "  deploy              : Creates or updates the cluster based on the template file."
-    echo "  resync              : Resyncs the cluster with the template. Equivalent to 'deploy'."
+    echo "  re-deploy           : Re-applies the cluster template. Equivalent to 'deploy'."
     echo "  destroy             : Deletes the '$CLUSTER_NAME' cluster from Omni."
-    echo "  install-completion  : Installs bash completion for this script into your ~/.bashrc file."
+    echo "  install-completion  : Installs or reinstalls bash completion for this script into your ~/.bashrc file."
     echo
     exit 1
 }
@@ -49,7 +49,7 @@ usage() {
 _manage_cluster_completions() {
     local cur_word commands
     cur_word="${COMP_WORDS[COMP_CWORD]}"
-    commands="deploy resync destroy install-completion"
+    commands="deploy re-deploy destroy install-completion"
 
     # Only complete the first argument after the script name.
     if [[ ${COMP_CWORD} -eq 1 ]]; then
@@ -57,29 +57,64 @@ _manage_cluster_completions() {
     fi
 }
 
-# Function to install the bash completion logic into the user's .bashrc
+# Function to install or reinstall the bash completion logic into the user's .bashrc
 install_completion() {
     local bashrc_file="$HOME/.bashrc"
-    local completion_tag="# SideroLabs Omni cluster management script completion"
+    local start_tag="# SideroLabs Omni cluster management script completion START"
+    local end_tag="# SideroLabs Omni cluster management script completion END"
+    local legacy_tag="# SideroLabs Omni cluster management script completion"
 
     echo "--> Checking for existing bash completion setup in $bashrc_file..."
 
-    if grep -qF "$completion_tag" "$bashrc_file"; then
-        echo "✔️  Completion is already installed in '$bashrc_file'."
-        echo "To apply changes, please uninstall the old block of code from your .bashrc and run this again."
-        return
+    # Case 1: New version with clear markers is found
+    if grep -qF "$start_tag" "$bashrc_file"; then
+        echo "✔️  An existing installation was found."
+        read -p "Do you want to reinstall it? (y/n): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo "--> Removing existing completion logic..."
+            # Use sed to remove the block delimited by the new markers
+            sed -i.bak "/^${start_tag}$/,/^${end_tag}$/d" "$bashrc_file"
+            echo "    Backup of previous .bashrc created at ${bashrc_file}.bak"
+            echo "✔️  Existing logic removed."
+        else
+            echo "--> Reinstallation cancelled."
+            return
+        fi
+    # Case 2: Legacy version is found
+    elif grep -qF "$legacy_tag" "$bashrc_file"; then
+        echo "✔️  A legacy installation was found."
+        read -p "Do you want to automatically replace it with the new version? (y/n): " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo "--> Removing legacy completion logic..."
+            # Backup the original file before modification
+            cp "$bashrc_file" "${bashrc_file}.bak"
+            
+            # Define start and end patterns for the legacy block. This is based on the known structure of the old script.
+            local legacy_start_pattern="^${legacy_tag}$"
+            local legacy_end_pattern="^complete -F _manage_cluster_completions manage-cluster.sh$"
+            
+            # Use sed to find and remove the legacy block.
+            sed -i.sed_bak "/${legacy_start_pattern}/,/${legacy_end_pattern}/d" "$bashrc_file"
+            
+            echo "    Backup of previous .bashrc created at ${bashrc_file}.bak"
+            echo "✔️  Legacy logic removed."
+        else
+            echo "--> Reinstallation cancelled. Please remove the legacy block manually to proceed."
+            return
+        fi
     fi
 
-    echo "--> No existing setup found. Installing completion..."
+    # Installation logic (runs for new installs or after removal)
+    echo "--> Installing new completion logic..."
     {
         echo
-        echo "$completion_tag"
-        # Use 'declare -f' to get the source code of the completion function
-        # and append it to .bashrc.
+        echo "$start_tag"
         declare -f _manage_cluster_completions
-        # Register the completion function for different ways of calling the script.
         echo "complete -F _manage_cluster_completions ./manage-cluster.sh"
         echo "complete -F _manage_cluster_completions manage-cluster.sh"
+        echo "$end_tag"
     } >> "$bashrc_file"
 
     echo "✔️  Completion logic successfully added to '$bashrc_file'."
@@ -89,10 +124,11 @@ install_completion() {
 }
 
 
-# Function to deploy or resync the cluster
-deploy_or_resync() {
-    echo "--> Syncing cluster template '$TEMPLATE_FILE' with Omni..."
-    echo "This will create the '$CLUSTER_NAME' cluster if it doesn't exist, or update it if it does."
+# Function to deploy or re-deploy the cluster
+deploy_or_redeploy() {
+    echo "🚀 Starting cluster deployment/re-deployment process..."
+    echo "--> [1/4] Syncing cluster template '$TEMPLATE_FILE' with Omni..."
+    echo "    This will create the '$CLUSTER_NAME' cluster if it doesn't exist, or update it if it does."
     echo
 
     (
@@ -101,32 +137,32 @@ deploy_or_resync() {
     )
 
     echo
-    echo "--> Sync command executed successfully."
-    echo "Omni will now begin to allocate machines and bootstrap the cluster."
-
-    # Wait for the Kubernetes API to be ready before proceeding
-    echo "--> Waiting for Kubernetes API server to be ready..."
+    echo "✔️  [1/4] Sync command executed successfully."
+    echo "    Omni will now begin to allocate machines and bootstrap the cluster."
+    echo "--> [2/4] Waiting for Kubernetes API server to be ready..."
     while ! kubectl get nodes > /dev/null 2>&1; do
-        echo "    Kubernetes API not available yet. Retrying in 10 seconds..."
+        echo "    ... Kubernetes API not available yet. Retrying in 10 seconds..."
         sleep 10
     done
-    echo "✔️  Kubernetes API is ready."
+    echo "✔️  [2/4] Kubernetes API is ready."
 
+    echo "--> [3/4] Waiting for Cilium Operator to be deployed..."
     # Wait for the Cilium Operator deployment to exist.
-    echo "--> Waiting for the Cilium Operator deployment to be created..."
+    echo "    (a) Waiting for deployment to be created..."
     until kubectl get deployment cilium-operator -n kube-system > /dev/null 2>&1; do
-        echo "    Cilium Operator deployment not found yet. Retrying in 10 seconds..."
+        echo "        ... Cilium Operator deployment not found yet. Retrying in 10 seconds..."
         sleep 10
     done
-    echo "✔️  Cilium Operator deployment found."
+    echo "    ✔️  (a) Cilium Operator deployment found."
 
     # Wait for the Cilium Operator deployment to complete its rollout.
-    echo "--> Waiting for Cilium Operator to become available..."
+    echo "    (b) Waiting for rollout to complete..."
     kubectl rollout status deployment/cilium-operator -n kube-system --timeout=5m
-    echo "✔️  Cilium Operator is ready."
+    echo "✔️  [3/4] Cilium Operator is ready."
 
+    echo "--> [4/4] Finalizing deployment..."
     echo
-    echo "--> Deployment complete. The cilium-ingress service should now receive an external IP."
+    echo "✅ Deployment complete. The cilium-ingress service should now receive an external IP."
 }
 
 
@@ -169,8 +205,8 @@ fi
 ACTION=$1
 
 case $ACTION in
-    deploy|resync)
-        deploy_or_resync
+    deploy|re-deploy)
+        deploy_or_redeploy
         ;;
     destroy)
         destroy
