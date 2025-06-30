@@ -13,7 +13,7 @@ patches:
 kind: ControlPlane
 machineClass:
   name: 'Control Plane'
-  size: 1
+  size: 3
 patches:
   - name: cilium
     file: patches/cilium.yaml
@@ -26,4 +26,4 @@ kind: Workers
 name: workers
 machineClass:
   name: Worker
-  size: 12e
+  size: 3
