@@ -12,10 +12,10 @@ spec:
                   revision: HEAD
                   repoPath: apps/*/*
           - git:
-              repoURL: '{{ element.repoURL }}'
-              revision: '{{ element.revision }}'
+              repoURL: '{{ repoURL }}'
+              revision: '{{ revision }}'
               directories:
-                - path: '{{ element.repoPath }}'
+                - path: '{{ repoPath }}'
   syncPolicy:
     preserveResourcesOnDeletion: true
   template:
@@ -25,8 +25,8 @@ spec:
     spec:
       project: default
       source:
-        repoURL: '{{ element.repoURL }}'
-        targetRevision: '{{ element.revision }}'
+        repoURL: '{{ repoURL }}'
+        targetRevision: '{{ revision }}'
         path: '{{ path }}'
       destination:
         server: https://kubernetes.default.svc
