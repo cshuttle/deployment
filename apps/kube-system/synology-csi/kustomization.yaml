@@ -1,5 +1,18 @@
+# path: apps/kube-system/synology-csi/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# The namespace for all resources in this Kustomization
+namespace: kube-system
+
 resources:
+  # This is your BitwardenSecret manifest
   - secret.yaml
+
+# This tells Kustomize to render the Synology CSI Helm chart
+helmCharts:
+  - name: synology-csi
+    repo: https://zebernst.github.io/synology-csi-talos
+    version: "0.10.1"
+    releaseName: synology-csi-driver
+    # Kustomize will automatically use the values.yaml file in this directory
