@@ -7,5 +7,10 @@ resources:
   - node.yml
   - csi-driver.yml
   - storage-class.yml
-  - ../../bitwarden/sm-operator
   - ../synology-iscsi-credentials
+helmCharts:
+- name: sm-operator
+  version: 0.1.0
+  repo: https://charts.bitwarden.com
+  releaseName: sm-operator
+  namespace: synology-csi
