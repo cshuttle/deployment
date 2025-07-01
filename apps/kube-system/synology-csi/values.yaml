@@ -1,0 +1,69 @@
+# Client information for connecting to Synology NAS
+# Using existing secret created by Bitwarden Secrets Manager
+clientInfoSecret:
+  name: "synology-csi-client-info"
+  create: false
+
+  # Storage classes configuration
+  storageClasses:
+    delete:
+      name: "synology-csi-delete"
+      driver: "csi.san.synology.com"
+      reclaimPolicy: "Delete"
+      volumeBindingMode: "Immediate"
+      allowVolumeExpansion: true
+      parameters:
+        fsType: "ext4"
+    retain:
+      name: "synology-csi-retain"
+      driver: "csi.san.synology.com"
+      reclaimPolicy: "Retain"
+      volumeBindingMode: "Immediate"
+      allowVolumeExpansion: true
+      parameters:
+        fsType: "ext4"
+
+  # Volume snapshot classes (if CSI Snapshotter is installed)
+  volumeSnapshotClasses:
+    - name: "synology-csi-snapshot"
+      driver: "csi.san.synology.com"
+      deletionPolicy: "Delete"
+
+  # Controller configuration
+  controller:
+    replicas: 2
+    image:
+      repository: "synology/synology-csi"
+      tag: "v1.1.3"
+      pullPolicy: "IfNotPresent"
+
+  # Node configuration
+  node:
+    image:
+      repository: "synology/synology-csi"
+      tag: "v1.1.3"
+      pullPolicy: "IfNotPresent"
+    maxVolumesPerNode: 256
+
+  # CSI components images
+  images:
+    csiProvisioner:
+      repository: "registry.k8s.io/sig-storage/csi-provisioner"
+      tag: "v3.6.0"
+    csiAttacher:  
+      repository: "registry.k8s.io/sig-storage/csi-attacher"
+      tag: "v4.4.0"
+    csiResizer:
+      repository: "registry.k8s.io/sig-storage/csi-resizer"
+      tag: "v1.9.0"
+    csiSnapshotter:
+      repository: "registry.k8s.io/sig-storage/csi-snapshotter"
+      tag: "v6.3.0"
+    csiNodeDriverRegistrar:
+      repository: "registry.k8s.io/sig-storage/csi-node-driver-registrar"
+      tag: "v2.9.0"
+
+# These values will be populated from Bitwarden Secrets Manager
+# Reference the Bitwarden secret keys:
+# iscsiServiceAccount: "value from ISCSI_SERVICE_ACCOUNT"
+# iscsiServiceAccountPassword: "value from ISCSI_SERVICE_ACCOUNT_PASSWORD"
