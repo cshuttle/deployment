@@ -3,4 +3,3 @@ kind: Kustomization
 resources:
   - client-info-secret.yaml
   - github-credentials.yaml
-  - image-pull-secret.yaml
