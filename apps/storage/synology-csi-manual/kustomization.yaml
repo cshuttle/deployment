@@ -1,7 +1,5 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-buildMetadata:
-  - enable-helm
 namespace: synology-csi
 resources:
   - namespace.yml
@@ -10,8 +8,13 @@ resources:
   - csi-driver.yml
   - storage-class.yml
   - ../synology-iscsi-credentials
-helmCharts:
-- name: sm-operator
+generators:
+- |
+  apiVersion: builtin
+  kind: HelmChartInflationGenerator
+  metadata:
+    name: sm-operator
+  name: sm-operator
   version: 0.1.0
   repo: https://charts.bitwarden.com
   releaseName: sm-operator
