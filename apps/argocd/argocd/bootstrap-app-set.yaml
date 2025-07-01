@@ -37,6 +37,8 @@ spec:
         repoURL: '{{ repoURL }}'
         targetRevision: '{{ revision }}'
         path: '{{ path }}'
+        kustomize:
+          buildOptions: --enable-helm
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{ path[1] }}'
