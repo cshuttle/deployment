@@ -17,7 +17,7 @@ spec:
     server: https://kubernetes.default.svc
     # As per your original file structure, this will be deployed
     # into the 'bitwarden' namespace.
-    namespace: bitwarden
+    namespace: kube-system
   syncPolicy:
     automated:
       prune: false
