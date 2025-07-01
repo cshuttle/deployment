@@ -7,3 +7,4 @@ resources:
   - node.yml
   - csi-driver.yml
   - storage-class.yml
+  - ../synology-iscsi-credentials
