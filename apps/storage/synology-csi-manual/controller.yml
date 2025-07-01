@@ -3,6 +3,8 @@ kind: ServiceAccount
 metadata:
   name: csi-controller-sa
   namespace: synology-csi
+imagePullSecrets:
+  - name: ghcr-secret
 
 ---
 kind: ClusterRole
