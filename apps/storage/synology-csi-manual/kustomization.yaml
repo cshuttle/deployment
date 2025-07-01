@@ -7,4 +7,5 @@ resources:
   - node.yml
   - csi-driver.yml
   - storage-class.yml
+  - ../../bitwarden/sm-operator
   - ../synology-iscsi-credentials
