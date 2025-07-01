@@ -3,7 +3,8 @@ kind: Kustomization
 namespace: synology-csi
 resources:
   - namespace.yml
-  - csi-driver.yml
   - controller.yml
   - node.yml
+  - csi-driver.yml
   - storage-class.yml
+  - ../synology-iscsi-credentials/client-info-secret.yaml
