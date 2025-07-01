@@ -1,3 +1,4 @@
+# path: apps/argocd/argocd/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
@@ -5,7 +6,10 @@ namespace: argocd
 resources:
   - namespace.yaml
   - github.com/argoproj/argo-cd/manifests/cluster-install?ref=v2.9.3
+  # The original ApplicationSet, which now excludes the operator
   - bootstrap-app-set.yaml
+  # The new standalone Application for the operator
+  - app-bitwarden-operator.yaml
 
 patches:
   - path: config.yaml

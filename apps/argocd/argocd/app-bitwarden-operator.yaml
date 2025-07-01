@@ -1,0 +1,26 @@
+# path: apps/argocd/argocd/app-bitwarden-operator.yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bitwarden-sm-operator
+  namespace: argocd
+  annotations:
+    # Sync this application in the first wave (Wave 0)
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/cshuttle/deployment.git
+    targetRevision: HEAD
+    path: apps/bitwarden/sm-operator
+  destination:
+    server: https://kubernetes.default.svc
+    # As per your original file structure, this will be deployed
+    # into the 'bitwarden' namespace.
+    namespace: bitwarden
+  syncPolicy:
+    automated:
+      prune: false
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

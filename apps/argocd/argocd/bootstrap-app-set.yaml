@@ -1,7 +1,11 @@
+# path: apps/argocd/argocd/bootstrap-app-set.yaml
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: bootstrap
+  name: bootstrap-cluster-apps
+  annotations:
+    # Sync this ApplicationSet in the second wave (Wave 1)
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   generators:
     - matrix:
@@ -10,12 +14,17 @@ spec:
               elements:
                 - repoURL: https://github.com/cshuttle/deployment.git
                   revision: HEAD
+                  # The path glob remains the same
                   repoPath: apps/*/*
           - git:
               repoURL: '{{ repoURL }}'
               revision: '{{ revision }}'
               directories:
                 - path: '{{ repoPath }}'
+              # This filter prevents the ApplicationSet from creating an
+              # application for the bitwarden operator, which is now handled separately.
+              filter:
+                path: '!*apps/bitwarden/sm-operator*'
   syncPolicy:
     preserveResourcesOnDeletion: true
   template:

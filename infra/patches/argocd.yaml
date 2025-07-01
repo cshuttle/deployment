@@ -22268,9 +22268,34 @@ cluster:
                   secretName: argocd-repo-server-tls
         ---
         apiVersion: argoproj.io/v1alpha1
+        kind: Application
+        metadata:
+          annotations:
+            argocd.argoproj.io/sync-wave: "0"
+          name: bitwarden-sm-operator
+          namespace: argocd
+        spec:
+          destination:
+            namespace: bitwarden
+            server: https://kubernetes.default.svc
+          project: default
+          source:
+            path: apps/bitwarden/sm-operator
+            repoURL: https://github.com/cshuttle/deployment.git
+            targetRevision: HEAD
+          syncPolicy:
+            automated:
+              prune: false
+            syncOptions:
+            - CreateNamespace=true
+            - ServerSideApply=true
+        ---
+        apiVersion: argoproj.io/v1alpha1
         kind: ApplicationSet
         metadata:
-          name: bootstrap
+          annotations:
+            argocd.argoproj.io/sync-wave: "1"
+          name: bootstrap-cluster-apps
           namespace: argocd
         spec:
           generators:
@@ -22284,6 +22309,8 @@ cluster:
               - git:
                   directories:
                   - path: '{{ repoPath }}'
+                  filter:
+                    path: '!*apps/bitwarden/sm-operator*'
                   repoURL: '{{ repoURL }}'
                   revision: '{{ revision }}'
           syncPolicy:
