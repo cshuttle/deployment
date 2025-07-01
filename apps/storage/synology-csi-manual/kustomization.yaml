@@ -7,6 +7,4 @@ resources:
   - node.yml
   - csi-driver.yml
   - storage-class.yml
-  - ../synology-iscsi-credentials/client-info-secret.yaml
-  - ../synology-iscsi-credentials/github-credentials.yaml
-  - ../synology-iscsi-credentials/image-pull-secret.yaml
+  - ../synology-iscsi-credentials
