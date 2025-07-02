@@ -21,10 +21,10 @@ spec:
               revision: '{{ revision }}'
               directories:
                 - path: '{{ repoPath }}'
-              # This filter prevents the ApplicationSet from creating an
-              # application for the bitwarden operator, which is now handled separately.
+              # This filter now prevents the ApplicationSet from creating an
+              # application for the bitwarden operator AND the synology csi driver.
               filter:
-                path: '!*apps/bitwarden/sm-operator*'
+                path: '!*apps/bitwarden/sm-operator* && !*apps/kube-system/synology-csi*'
   syncPolicy:
     preserveResourcesOnDeletion: true
   template:
