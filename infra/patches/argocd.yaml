@@ -22276,7 +22276,7 @@ cluster:
           namespace: argocd
         spec:
           destination:
-            namespace: bitwarden
+            namespace: kube-system
             server: https://kubernetes.default.svc
           project: default
           source:
@@ -22346,6 +22346,8 @@ cluster:
                 namespace: kube-system
               project: default
               source:
+                kustomize:
+                  buildOptions: --enable-helm
                 path: '{{ path }}'
                 repoURL: '{{ repoURL }}'
                 targetRevision: '{{ revision }}'
