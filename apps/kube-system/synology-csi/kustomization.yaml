@@ -13,6 +13,6 @@ resources:
 helmCharts:
   - name: synology-csi
     repo: https://zebernst.github.io/synology-csi-talos
-    version: "0.10.1"
+    version: "0.9.4"
     releaseName: synology-csi-driver
     # Kustomize will automatically use the values.yaml file in this directory
