@@ -1,0 +1,22 @@
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: main-pool
+  namespace: kube-system
+spec:
+  blocks:
+  - start: "192.168.1.220"
+    stop: "192.168.1.229"
+---
+apiVersion: cilium.io/v2
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: default-l2-announcement-policy
+  namespace: kube-system
+spec:
+  # Select all LoadBalancer services
+  serviceSelector: {}
+  # Select all nodes to participate in L2 announcements
+  nodeSelector: {}
+  # Announce LoadBalancer IPs
+  loadBalancerIPs: true

@@ -41,3 +41,10 @@ cilium:
           # Enable Omni Workload Proxying for this service
           omni-kube-service-exposer.sidero.dev/port: "50080"
           omni-kube-service-exposer.sidero.dev/label: Hubble
+  # Enable L2 announcements for load balancing
+  l2announcements:
+    enabled: true
+  # Enable Load Balancer IPAM
+  loadBalancer:
+    l2:
+      enabled: true

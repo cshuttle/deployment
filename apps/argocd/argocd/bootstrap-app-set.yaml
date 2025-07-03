@@ -68,3 +68,11 @@ spec:
             - /data/ca.crt
             - /data/tls.crt
             - /data/tls.key
+        # Ignore status of the cilium-ingress service
+        - group: ""
+          kind: Service
+          name: cilium-ingress
+          namespace: kube-system
+          jsonPointers:
+            - /status
+            - /spec/ports
