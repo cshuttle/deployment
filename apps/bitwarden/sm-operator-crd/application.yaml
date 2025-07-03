@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://charts.bitwarden.com
     chart: sm-operator
-    #targetRevision: 0.2.1
+    targetRevision: 0.1.0
     helm:
       values: |
         settings:
