@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bitwarden-sm-operator
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://charts.bitwarden.com
+    chart: sm-operator
+    targetRevision: 0.2.1
+    helm:
+      values: |
+        settings:
+          bwSecretsManagerRefreshInterval: 180
+  destination:
+    server: "https://kubernetes.default.svc"
+    namespace: bitwarden
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
