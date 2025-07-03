@@ -32,7 +32,7 @@ export OMNI_SERVICEACCOUNT_SECRET_ID="459a62b0-31fb-4f07-9976-b30800cbe5d8"
 
 # --- Bitwarden Operator Bootstrap Configuration ---
 # These values define the Kubernetes secret that will be created to hold the operator's token.
-BW_K8S_SECRET_NAMESPACE="kube-system"
+BW_K8S_SECRET_NAMESPACE="bitwarden"
 BW_K8S_SECRET_NAME="bw-auth-token"
 
 

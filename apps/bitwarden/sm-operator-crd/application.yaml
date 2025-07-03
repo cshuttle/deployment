@@ -10,11 +10,11 @@ spec:
   source:
     repoURL: https://charts.bitwarden.com
     chart: sm-operator
-    targetRevision: 0.2.1
+    #targetRevision: 0.2.1
     helm:
       values: |
         settings:
-          bwSecretsManagerRefreshInterval: 180
+          bwSecretsManagerRefreshInterval: 300
   destination:
     server: "https://kubernetes.default.svc"
     namespace: bitwarden
