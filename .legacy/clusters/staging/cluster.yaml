@@ -1,0 +1,30 @@
+# path: clusters/staging/cluster.yaml
+
+kind: Cluster
+name: Talos
+talos:
+  version: v1.10.4
+kubernetes:
+  # Corrected to a valid Kubernetes version
+  version: v1.33.2
+features:
+  enableWorkloadProxy: true
+---
+kind: ControlPlane
+machineClass:
+  name: 'Control Plane'
+  size: 3
+  install:
+    extension: helm
+    chart:
+      # Corrected to be a relative path within the Git repository
+      path: infrastructure/base/argo-cd
+      values:
+        # Corrected to be a relative path within the Git repository
+        file: infrastructure/staging/argo-cd/values.yaml
+---
+kind: Workers
+name: workers
+machineClass:
+  name: Worker
+  size: 3

@@ -1,0 +1,4 @@
+# In infrastructure/staging/argo-cd/values.yaml
+argo-cd:
+  # Ensure the namespace is created by the Helm chart
+  namespace: "argocd"

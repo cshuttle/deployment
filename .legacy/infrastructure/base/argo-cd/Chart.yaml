@@ -1,0 +1,11 @@
+apiVersion: v2
+name: argo-cd
+description: Our internal wrapper chart for the Argo CD installation.
+type: application
+version: 1.0.0 # The version of OUR chart.
+appVersion: "v3.0.9" # The version of Argo CD you want to deploy.
+
+dependencies:
+- name: argo-cd
+  version: "8.1.2" # The official Helm chart version to use.
+  repository: "https://argoproj.github.io/argo-helm"
