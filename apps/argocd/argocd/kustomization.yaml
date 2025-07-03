@@ -1,17 +1,11 @@
-# path: apps/argocd/argocd/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 namespace: argocd
 resources:
   - namespace.yaml
-  - github.com/argoproj/argo-cd/manifests/cluster-install?ref=v3.0.6
-  # The ApplicationSet, which now excludes the operator and synology-csi
+  - github.com/argoproj/argo-cd/manifests/cluster-install?ref=v2.9.3
   - bootstrap-app-set.yaml
-  # Standalone Application for the bitwarden operator
-  - app-bitwarden-operator.yaml
-  # Add the new standalone Application for the Synology CSI driver
-  - app-synology-csi.yaml
 
 patches:
   - path: config.yaml
