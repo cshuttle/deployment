@@ -75,3 +75,5 @@ spec:
           namespace: kube-system
           jsonPointers:
             - /status
+          jqPathExpressions:
+            - .spec.ports[].nodePort
