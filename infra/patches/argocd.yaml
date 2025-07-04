@@ -26624,14 +26624,6 @@ cluster:
                 kind: Secret
                 name: hubble-relay-client-certs
                 namespace: kube-system
-              - group: ""
-                jqPathExpressions:
-                - .spec.ports[].nodePort
-                jsonPointers:
-                - /status
-                kind: Service
-                name: cilium-ingress
-                namespace: kube-system
               project: default
               source:
                 path: '{{ path }}'
