@@ -1,6 +1,10 @@
+# apps/argocd/argocd/config.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: argocd-cm
 data:
   application.resourceTrackingMethod: annotation
+  resource.customizations.ignoreResourceUpdates.v1_Service: |
+    jqPathExpressions:
+    - .spec.ports[].nodePort

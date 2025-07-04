@@ -24595,6 +24595,9 @@ cluster:
               - /metadata
               - /endpoints
               - /ports
+          resource.customizations.ignoreResourceUpdates.v1_Service: |-
+            jqPathExpressions:
+            - .spec.ports[].nodePort
           resource.exclusions: |
             ### Network resources created by the Kubernetes control plane and excluded to reduce the number of watched events and UI clutter
             - apiGroups:
@@ -26620,6 +26623,14 @@ cluster:
                 - /data/tls.key
                 kind: Secret
                 name: hubble-relay-client-certs
+                namespace: kube-system
+              - group: ""
+                jqPathExpressions:
+                - .spec.ports[].nodePort
+                jsonPointers:
+                - /status
+                kind: Service
+                name: cilium-ingress
                 namespace: kube-system
               project: default
               source:
