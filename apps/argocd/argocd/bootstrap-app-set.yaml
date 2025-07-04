@@ -75,4 +75,3 @@ spec:
           namespace: kube-system
           jsonPointers:
             - /status
-            - /spec/ports
