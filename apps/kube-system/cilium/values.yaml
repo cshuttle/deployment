@@ -27,6 +27,7 @@ cilium:
   # Enable Cilium Ingress Controller
   ingressController:
     enabled: true
+    loadbalancerMode: shared
   # Use KubePrism to access cluster API
   k8sServiceHost: localhost
   k8sServicePort: 7445
